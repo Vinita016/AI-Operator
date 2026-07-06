@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Operator — Zero to Shipping</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F6F2;
+  --ink:#0E2A2B;
+  --cobalt:#2743F0;
+  --amber:#F2A916;
+  --muted:#66756F;
+  --line:#D8DCD3;
+  --card:#FFFFFF;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font-family:'Public Sans',sans-serif;font-size:17px;line-height:1.6}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+a{color:var(--cobalt)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-visible{outline:3px solid var(--cobalt);outline-offset:2px}
+
+/* ---------- Sticky readiness rail (signature element) ---------- */
+.rail{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:14px;padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.rail .dots{display:flex;gap:8px;flex:1;align-items:center;overflow-x:auto}
+.rail a.dot{display:flex;align-items:center;gap:6px;color:var(--paper);text-decoration:none;opacity:.55;white-space:nowrap;padding:4px 8px;border:1px solid transparent;border-radius:3px}
+.rail a.dot:hover{opacity:1;border-color:rgba(255,255,255,.3)}
+.rail a.dot.done{opacity:1;color:var(--amber)}
+.rail a.dot .pip{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+.rail .score{font-weight:600;white-space:nowrap}
+.rail .score b{color:var(--amber);font-size:15px}
+.railbar{position:sticky;top:44px;z-index:49;height:4px;background:var(--line)}
+.railbar i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--cobalt),var(--amber));transition:width .4s ease}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 24px}
+
+/* ---------- Hero ---------- */
+.hero{padding:72px 0 56px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--cobalt);font-weight:600;margin-bottom:14px}
+h1{font-family:'Anton',sans-serif;font-size:clamp(52px,9vw,110px);line-height:.95;text-transform:uppercase;letter-spacing:.01em}
+h1 .hollow{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.hero p.lede{max-width:640px;margin-top:22px;font-size:19px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:34px;font-family:'IBM Plex Mono',monospace;font-size:13px}
+.hero .meta div b{display:block;font-size:26px;color:var(--cobalt)}
+
+/* ---------- Sections / phases ---------- */
+section.phase{padding:64px 0;border-bottom:1px solid var(--line)}
+.phasehead{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:8px}
+.phasenum{font-family:'Anton',sans-serif;font-size:64px;color:transparent;-webkit-text-stroke:2px var(--cobalt);line-height:1}
+h2{font-family:'Anton',sans-serif;font-size:clamp(30px,4.5vw,48px);text-transform:uppercase;line-height:1.05}
+.phasegoal{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--muted);margin-bottom:26px}
+.phasegoal b{color:var(--ink)}
+h3{font-family:'Public Sans',sans-serif;font-weight:700;font-size:20px;margin:34px 0 12px}
+p.body{max-width:700px;margin-bottom:14px}
+
+/* ---------- Cards / resources ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin:18px 0}
+.res{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--cobalt);padding:18px;border-radius:4px;display:block;text-decoration:none;color:var(--ink);transition:transform .15s ease,box-shadow .15s ease}
+.res:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(14,42,43,.10)}
+.res .inst{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobalt);font-weight:600}
+.res .t{font-weight:700;margin:6px 0 4px}
+.res .d{font-size:14px;color:var(--muted)}
+.res .free{display:inline-block;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--amber);color:var(--ink);padding:2px 8px;border-radius:2px;font-weight:600}
+
+/* ---------- Video ---------- */
+.vidgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin:18px 0}
+.vid{background:var(--card);border:1px solid var(--line);border-radius:4px;overflow:hidden;display:block;text-decoration:none;color:var(--ink);transition:transform .15s ease,box-shadow .15s ease}
+.vid:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(14,42,43,.12)}
+.vid .frame{position:relative;padding-top:52%;background:var(--ink)}
+.vid .frame svg{position:absolute;inset:0;width:100%;height:100%}
+.vid:hover .playbtn{fill:var(--amber)}
+.vid .cap{padding:12px 16px;font-size:14px}
+.vid .cap b{display:block}
+.vid .cap span{color:var(--muted);font-size:13px}
+.vid .cap .watch{display:inline-block;margin-top:8px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--cobalt);font-weight:600;letter-spacing:.08em}
+
+/* ---------- Drills (checkboxes) ---------- */
+.drills{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:8px 0;margin:18px 0}
+.drills header{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:12px 18px;color:var(--muted);border-bottom:1px solid var(--line)}
+.drill{display:flex;gap:14px;align-items:flex-start;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer}
+.drill:last-child{border-bottom:none}
+.drill input{margin-top:4px;width:18px;height:18px;accent-color:var(--cobalt);flex-shrink:0;cursor:pointer}
+.drill span{font-size:15.5px}
+.drill.checked span{color:var(--muted);text-decoration:line-through}
+
+/* ---------- Interactive widgets ---------- */
+.widget{background:var(--ink);color:var(--paper);border-radius:6px;padding:28px;margin:26px 0}
+.widget .wtag{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:8px}
+.widget h3{margin:0 0 8px;color:var(--paper)}
+.widget p{font-size:15px;opacity:.85;max-width:640px;margin-bottom:16px}
+.widget textarea{width:100%;min-height:110px;background:#123536;border:1px solid #2A4E4F;color:var(--paper);border-radius:4px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:14px;resize:vertical}
+.widget button.go{margin-top:12px;background:var(--amber);color:var(--ink);border:0;font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;padding:11px 22px;border-radius:3px;cursor:pointer}
+.widget button.go:hover{filter:brightness(1.08)}
+.scorebar{height:10px;background:#123536;border-radius:5px;margin:16px 0 8px;overflow:hidden}
+.scorebar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#E2483D,var(--amber),#39C46E);transition:width .5s ease}
+.checks{list-style:none;font-size:14px;font-family:'IBM Plex Mono',monospace}
+.checks li{padding:5px 0;opacity:.5}
+.checks li.hit{opacity:1;color:#39C46E}
+.checks li::before{content:"✗ ";}
+.checks li.hit::before{content:"✓ "}
+.verdict{margin-top:12px;font-weight:600;font-size:15px}
+
+.temp-out{background:#123536;border:1px solid #2A4E4F;border-radius:4px;padding:16px;font-family:'IBM Plex Mono',monospace;font-size:14px;min-height:64px;margin-top:14px}
+input[type=range]{width:100%;accent-color:var(--amber);margin:10px 0}
+.templabels{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:.7}
+
+.quiz .q{background:#123536;border-radius:4px;padding:16px;margin:12px 0}
+.quiz .q p{font-weight:600;opacity:1;margin-bottom:10px}
+.quiz .opt{display:block;background:transparent;border:1px solid #2A4E4F;color:var(--paper);width:100%;text-align:left;padding:10px 14px;border-radius:3px;margin:6px 0;cursor:pointer;font-size:14px;font-family:'Public Sans',sans-serif}
+.quiz .opt:hover{border-color:var(--amber)}
+.quiz .opt.right{border-color:#39C46E;background:rgba(57,196,110,.12)}
+.quiz .opt.wrong{border-color:#E2483D;background:rgba(226,72,61,.12)}
+.quiz .expl{font-size:13px;margin-top:8px;color:var(--amber);display:none}
+
+.projpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+.projcard{background:#123536;border:1px solid #2A4E4F;border-radius:4px;padding:18px;cursor:pointer;transition:border-color .15s}
+.projcard:hover{border-color:var(--amber)}
+.projcard.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.projcard .lvl{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase}
+.projcard b{display:block;margin:6px 0 4px}
+.projcard small{opacity:.75;font-size:13px}
+.projbrief{display:none;margin-top:18px;background:#123536;border-left:4px solid var(--amber);padding:18px;border-radius:4px;font-size:14.5px}
+.projbrief.show{display:block}
+.projbrief ol{margin:10px 0 0 20px}
+.projbrief li{margin:6px 0}
+
+/* ---------- SVG diagram ---------- */
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:20px;margin:18px 0}
+.diagram svg{width:100%;height:auto;display:block}
+
+/* ---------- Vault & footer ---------- */
+.vault{padding:64px 0}
+footer{background:var(--ink);color:var(--paper);padding:48px 0;margin-top:0}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;font-family:'IBM Plex Mono',monospace;font-size:12px}
+footer b{color:var(--amber)}
+
+
+/* ---------- Reveal on scroll ---------- */
+.rv{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
+.rv.in{opacity:1;transform:none}
+
+/* ---------- Method / science strip ---------- */
+.science{background:var(--ink);color:var(--paper);padding:56px 0}
+.science h2{color:var(--paper)}
+.science .lede2{max-width:680px;opacity:.85;margin:12px 0 6px;font-size:16px}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:26px}
+.sci{background:#123536;border:1px solid #2A4E4F;border-radius:6px;padding:18px}
+.sci .k{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;font-weight:600}
+.sci b{display:block;margin:7px 0 5px;font-size:15.5px}
+.sci p{font-size:13.5px;opacity:.8;margin:0;line-height:1.5}
+
+/* ---------- Recall Gym (retrieval practice) ---------- */
+.gym{margin:28px 0}
+.gymtag{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--cobalt);font-weight:600;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.fc{perspective:900px;min-height:170px;cursor:pointer}
+.fc .inner{position:relative;width:100%;height:100%;min-height:170px;transform-style:preserve-3d;transition:transform .5s}
+.fc.flip .inner{transform:rotateY(180deg)}
+.fc .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:6px;padding:18px;display:flex;flex-direction:column;justify-content:center;font-size:14.5px;line-height:1.45}
+.fc .front{background:var(--card);border:1.5px solid var(--ink);font-weight:600}
+.fc .front::after{content:"TAP TO REVEAL";font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.14em;color:var(--cobalt);margin-top:12px;font-weight:600}
+.fc .back{background:var(--cobalt);color:#fff;transform:rotateY(180deg)}
+@media (prefers-reduced-motion: reduce){.fc .inner{transition:none}.fc.flip .front{visibility:hidden}}
+
+/* ---------- Phase progress chips ---------- */
+.chip{display:inline-block;margin-left:10px;background:var(--ink);color:var(--amber);font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 10px;border-radius:11px;font-weight:600}
+.chip.full{background:var(--amber);color:var(--ink)}
+
+/* ---------- Milestone toast ---------- */
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(90px);background:var(--ink);color:var(--paper);border-left:4px solid var(--amber);padding:14px 20px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:13px;z-index:99;opacity:0;transition:opacity .4s ease,transform .4s ease;max-width:92vw;box-shadow:0 8px 24px rgba(14,42,43,.35)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.rail em{font-style:normal}
+
+@media(max-width:640px){
+  body{font-size:16px}
+  .rail{font-size:11px;padding:8px 10px;gap:8px}
+  .rail a.dot em{display:none}
+  .rail .dots{gap:2px}
+  .railbar{top:40px}
+  .hero{padding:48px 0 40px}
+  .hero .meta{gap:16px}
+  section.phase{padding:44px 0}
+  .phasenum{font-size:40px}
+  .phasegoal{font-size:12px}
+  .widget{padding:20px 16px}
+  .drill{padding:16px 14px}
+  .drill input{width:22px;height:22px}
+  .res{padding:16px}
+  .science{padding:44px 0}
+  footer .wrap{flex-direction:column;gap:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Sticky readiness rail ===== -->
+<div class="rail" id="rail">
+  <div class="dots" id="raildots">
+    <a class="dot" href="#p1" data-phase="1"><span class="pip"></span>01<em>&nbsp;Foundations</em></a>
+    <a class="dot" href="#p2" data-phase="2"><span class="pip"></span>02<em>&nbsp;Prompting</em></a>
+    <a class="dot" href="#p3" data-phase="3"><span class="pip"></span>03<em>&nbsp;Leverage</em></a>
+    <a class="dot" href="#p4" data-phase="4"><span class="pip"></span>04<em>&nbsp;Building</em></a>
+    <a class="dot" href="#p5" data-phase="5"><span class="pip"></span>05<em>&nbsp;Shipping</em></a>
+  </div>
+  <div class="score">READINESS <b id="scoreNum">0%</b></div>
+</div>
+<div class="railbar"><i id="railfill"></i></div>
+
+<!-- ===== Hero ===== -->
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Operator Training Program · Self-paced · Built from Harvard, MIT, Stanford, Google &amp; Anthropic resources</div>
+    <h1>Zero to<br><span class="hollow">Shipping AI</span></h1>
+    <p class="lede">You use ChatGPT casually. That puts you ahead of most people and behind everyone who matters. This program takes you through five phases — understand it, command it, monetize it, build with it, ship it. Every drill you complete moves your readiness score. No drills, no progress. Simple.</p>
+    <div class="meta">
+      <div><b>5</b>Phases</div>
+      <div><b>25</b>Drills</div>
+      <div><b>$0</b>Cost — every core resource is free</div>
+      <div><b>~6 wks</b>At 5 focused hrs/week</div>
+    </div>
+  </div>
+</header>
+
+<!-- ===== Method strip ===== -->
+<section class="science" id="method">
+  <div class="wrap">
+    <div class="eyebrow" style="color:var(--amber)">Why this works — the method</div>
+    <h2>Built on cognitive science, not vibes</h2>
+    <p class="lede2">Every mechanic on this page maps to a high-evidence finding from learning research. Knowing the method makes you use it harder — that's metacognition, and it's a feature too.</p>
+    <div class="sgrid">
+      <div class="sci"><span class="k">Testing effect</span><b>Recall Gyms in every phase</b><p>Retrieving from memory beats rereading by a wide margin (Roediger &amp; Karpicke, Washington Univ. in St. Louis). Answer out loud before you flip.</p></div>
+      <div class="sci"><span class="k">Spaced repetition</span><b>48-hour and 7-day returns</b><p>Memory decays on a predictable curve (Ebbinghaus). Revisit each phase's gym twice on schedule to lock it in.</p></div>
+      <div class="sci"><span class="k">Dual coding</span><b>Diagrams paired with words</b><p>Visual + verbal channels together encode deeper than either alone (Paivio). That's why the LLM pipeline is drawn, not just described.</p></div>
+      <div class="sci"><span class="k">Chunking &amp; cognitive load</span><b>5 phases × 5 drills</b><p>Small, sequenced units protect working memory (Miller; Sweller). One phase at a time. No heroic cram sessions.</p></div>
+      <div class="sci"><span class="k">Goal gradient</span><b>Live readiness score</b><p>Effort accelerates as visible progress nears the goal (Hull; Kivetz). Your rail score is engineered motivation.</p></div>
+      <div class="sci"><span class="k">Self-explanation</span><b>Out-loud teaching drills</b><p>Explaining in your own words exposes fake understanding instantly (Chi). If you can't teach it, you don't own it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PHASE 1 ===== -->
+<section class="phase" id="p1">
+  <div class="wrap">
+    <div class="phasehead"><span class="phasenum">01</span><h2>Foundations — Know the Machine</h2></div>
+    <div class="phasegoal">GOAL → <b>Explain how an LLM works in 60 seconds without hand-waving.</b> If you can't explain it, you can't exploit it. <span class="chip" data-chip="1">0/5 drills</span></div>
+
+    <p class="body">Most "AI users" treat the model like a magic 8-ball. Operators know it's a next-token prediction engine trained on text — and that single fact explains why it hallucinates, why context matters, and why prompts work the way they do. Watch these before touching anything else. They're the best explanations on the internet, full stop.</p>
+
+    <div class="vidgrid">
+      <a class="vid" href="https://www.youtube.com/watch?v=aircAruvnKk" target="_blank" rel="noopener">
+        <div class="frame"><svg viewBox="0 0 320 168" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Play video"><rect width="320" height="168" fill="#0E2A2B"/><circle cx="42" cy="130" r="34" fill="#2743F0" opacity=".5"/><circle cx="285" cy="30" r="46" fill="#F2A916" opacity=".28"/><text x="24" y="42" font-family="IBM Plex Mono, monospace" font-size="11" fill="#F2A916" letter-spacing="2">VIDEO · 19 MIN</text><circle class="playbtn" cx="160" cy="90" r="28" fill="#F5F6F2"/><path d="M152,76 L176,90 L152,104 z" fill="#0E2A2B"/></svg></div>
+        <div class="cap"><b>But what is a neural network?</b><span>3Blue1Brown — the visual foundation everything else builds on.</span><span class="watch">▶ WATCH ON YOUTUBE →</span></div>
+      </a>
+      <a class="vid" href="https://www.youtube.com/watch?v=wjZofJX0v4M" target="_blank" rel="noopener">
+        <div class="frame"><svg viewBox="0 0 320 168" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Play video"><rect width="320" height="168" fill="#0E2A2B"/><rect x="230" y="98" width="120" height="120" fill="#2743F0" opacity=".4" transform="rotate(18 290 158)"/><circle cx="40" cy="34" r="40" fill="#F2A916" opacity=".25"/><text x="24" y="42" font-family="IBM Plex Mono, monospace" font-size="11" fill="#F2A916" letter-spacing="2">VIDEO · 27 MIN</text><circle class="playbtn" cx="160" cy="90" r="28" fill="#F5F6F2"/><path d="M152,76 L176,90 L152,104 z" fill="#0E2A2B"/></svg></div>
+        <div class="cap"><b>But what is a GPT? Visual intro to transformers</b><span>3Blue1Brown — how the models you use actually work.</span><span class="watch">▶ WATCH ON YOUTUBE →</span></div>
+      </a>
+      <a class="vid" href="https://www.youtube.com/watch?v=zjkBMFhNj_g" target="_blank" rel="noopener">
+        <div class="frame"><svg viewBox="0 0 320 168" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Play video"><rect width="320" height="168" fill="#0E2A2B"/><rect x="-30" y="110" width="150" height="90" fill="#F2A916" opacity=".3" transform="rotate(-12 40 155)"/><circle cx="290" cy="120" r="42" fill="#2743F0" opacity=".45"/><text x="24" y="42" font-family="IBM Plex Mono, monospace" font-size="11" fill="#F2A916" letter-spacing="2">VIDEO · 60 MIN</text><circle class="playbtn" cx="160" cy="90" r="28" fill="#F5F6F2"/><path d="M152,76 L176,90 L152,104 z" fill="#0E2A2B"/></svg></div>
+        <div class="cap"><b>Intro to Large Language Models</b><span>Andrej Karpathy (ex-OpenAI/Tesla) — the 1-hour talk that made thousands literate.</span><span class="watch">▶ WATCH ON YOUTUBE →</span></div>
+      </a>
+    </div>
+
+    <div class="diagram" aria-label="Diagram of how a large language model processes a prompt">
+      <svg viewBox="0 0 900 190" xmlns="http://www.w3.org/2000/svg" role="img">
+        <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2743F0"/></marker></defs>
+        <rect x="10" y="55" width="170" height="80" rx="4" fill="none" stroke="#0E2A2B" stroke-width="2"/>
+        <text x="95" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#0E2A2B" font-weight="600">YOUR PROMPT</text>
+        <text x="95" y="112" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#66756F">"The capital of France is"</text>
+        <line x1="180" y1="95" x2="235" y2="95" stroke="#2743F0" stroke-width="2" marker-end="url(#ar)"/>
+        <rect x="240" y="35" width="180" height="120" rx="4" fill="#0E2A2B"/>
+        <text x="330" y="85" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#F5F6F2" font-weight="600">TOKENIZE</text>
+        <text x="330" y="108" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#F2A916">[464, 6864, 286, ...]</text>
+        <line x1="420" y1="95" x2="475" y2="95" stroke="#2743F0" stroke-width="2" marker-end="url(#ar)"/>
+        <rect x="480" y="35" width="200" height="120" rx="4" fill="#2743F0"/>
+        <text x="580" y="80" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#fff" font-weight="600">PREDICT NEXT TOKEN</text>
+        <text x="580" y="102" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#F5F6F2" opacity=".85">"Paris" 94% · "a" 2% · "the" 1%</text>
+        <text x="580" y="122" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#F5F6F2" opacity=".6">(repeat for every word)</text>
+        <line x1="680" y1="95" x2="735" y2="95" stroke="#2743F0" stroke-width="2" marker-end="url(#ar)"/>
+        <rect x="740" y="55" width="150" height="80" rx="4" fill="none" stroke="#F2A916" stroke-width="2"/>
+        <text x="815" y="90" text-anchor="middle" font-family="IBM Plex Mono" font-size="13" fill="#0E2A2B" font-weight="600">OUTPUT</text>
+        <text x="815" y="112" text-anchor="middle" font-family="IBM Plex Mono" font-size="11" fill="#66756F">"Paris."</text>
+      </svg>
+    </div>
+
+    <div class="widget">
+      <div class="wtag">Interactive · Temperature Lab</div>
+      <h3>Feel what "temperature" does</h3>
+      <p>Temperature controls how much randomness the model allows when picking the next token. Drag the slider and watch how the same prompt — "Write a tagline for a coffee shop" — changes character. Low = predictable. High = creative (and eventually unhinged).</p>
+      <input type="range" id="tempSlider" min="0" max="4" step="1" value="1" aria-label="Temperature">
+      <div class="templabels"><span>0.0 — deterministic</span><span>0.5</span><span>1.0</span><span>1.5</span><span>2.0 — chaos</span></div>
+      <div class="temp-out" id="tempOut"></div>
+    </div>
+
+    <div class="gym"><div class="gymtag">Recall Gym — answer out loud BEFORE flipping. Return in 48h, then 7 days.</div><div class="cards"><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">What is the single operation an LLM performs?</div><div class="face back">It predicts the most likely next token, over and over. Everything else — the brilliance and the failures — follows from that.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Why do LLMs hallucinate?</div><div class="face back">They optimize for plausible continuations, not truth. Sounding confident and being correct are different objectives.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">What does temperature control?</div><div class="face back">Randomness in token selection. Low = consistent and safe. High = creative, eventually incoherent.</div></div></div></div></div>
+
+    <div class="drills" data-phase="1">
+      <header>Phase 01 Drills — check them off as you complete them</header>
+      <label class="drill"><input type="checkbox"><span>Watch all three videos above. No skipping. Take one page of notes.</span></label>
+      <label class="drill"><input type="checkbox"><span>Explain "next-token prediction" out loud to someone (or record yourself) in under 60 seconds.</span></label>
+      <label class="drill"><input type="checkbox"><span>Enroll in <a href="https://cs50.harvard.edu/ai/" target="_blank" rel="noopener">Harvard CS50 AI</a> or <a href="https://www.elementsofai.com/" target="_blank" rel="noopener">Elements of AI (Univ. of Helsinki)</a> and finish the first module this week.</span></label>
+      <label class="drill"><input type="checkbox"><span>Write down 3 things LLMs are structurally bad at (and why) based on how they work.</span></label>
+      <label class="drill"><input type="checkbox"><span>Use the temperature lab above and explain in one sentence when you'd want high vs. low temperature.</span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PHASE 2 ===== -->
+<section class="phase" id="p2">
+  <div class="wrap">
+    <div class="phasehead"><span class="phasenum">02</span><h2>Prompting — Command the Machine</h2></div>
+    <div class="phasegoal">GOAL → <b>Never write a lazy prompt again.</b> The gap between a casual user and an operator is 90% prompt discipline. <span class="chip" data-chip="2">0/5 drills</span></div>
+
+    <p class="body">Here's the uncomfortable truth: your prompts are probably trash. "Write me an email" gets you generic mush because you gave the model nothing to work with. Great prompts have five components: <b>role, context, task, format, constraints</b>. The resources below are the actual playbooks used by the labs that build these models — not influencer threads.</p>
+
+    <div class="grid">
+      <a class="res" href="https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview" target="_blank" rel="noopener">
+        <div class="inst">Anthropic</div><div class="t">Prompt Engineering Guide</div><div class="d">The official playbook: roles, examples, chain-of-thought, XML structure. Dense and worth every minute.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/" target="_blank" rel="noopener">
+        <div class="inst">DeepLearning.AI · Andrew Ng</div><div class="t">Prompt Engineering for Developers</div><div class="d">90-minute course co-taught with OpenAI. The fastest structured upgrade to your prompting.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="https://platform.openai.com/docs/guides/prompt-engineering" target="_blank" rel="noopener">
+        <div class="inst">OpenAI</div><div class="t">Prompt Engineering Docs</div><div class="d">Six strategies with worked examples — split tasks, give the model time to think, use references.</div><span class="free">FREE</span>
+      </a>
+    </div>
+
+    <div class="widget">
+      <div class="wtag">Interactive · Prompt Grader</div>
+      <h3>Grade your prompt like an operator would</h3>
+      <p>Paste a real prompt you'd actually use. The grader checks it against the five components of a professional prompt. Under 60? Rewrite it. This is the drill that changes your daily output the fastest.</p>
+      <textarea id="promptIn" placeholder="Example of weak: 'write me a linkedin post about AI'&#10;&#10;Paste your prompt here..."></textarea>
+      <button class="go" id="gradeBtn">Grade my prompt</button>
+      <div class="scorebar"><i id="gradeFill"></i></div>
+      <ul class="checks" id="gradeChecks">
+        <li data-k="role">Assigns a role or persona ("You are a...", "Act as...")</li>
+        <li data-k="context">Provides context or background (audience, situation, "for", "about")</li>
+        <li data-k="format">Specifies output format (bullets, table, length, tone, structure)</li>
+        <li data-k="example">Includes an example or reference to imitate</li>
+        <li data-k="constraint">Sets constraints (what to avoid, limits, "don't", "must")</li>
+        <li data-k="length">Long enough to carry real detail (40+ words)</li>
+      </ul>
+      <div class="verdict" id="gradeVerdict"></div>
+    </div>
+
+    <div class="gym"><div class="gymtag">Recall Gym — answer out loud BEFORE flipping. Return in 48h, then 7 days.</div><div class="cards"><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Name the 5 components of an operator prompt.</div><div class="face back">Role, context, task, format, constraints. Add an example of great output and you're in the top tier.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">What is few-shot prompting?</div><div class="face back">Showing the model 1–3 examples of the output you want so it imitates the pattern instead of guessing.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Output came back generic. First move?</div><div class="face back">Add specificity: role + context + format + one example. Never just hit retry and hope.</div></div></div></div></div>
+
+    <div class="drills" data-phase="2">
+      <header>Phase 02 Drills</header>
+      <label class="drill"><input type="checkbox"><span>Score 80+ on the prompt grader with a prompt you'll actually use this week.</span></label>
+      <label class="drill"><input type="checkbox"><span>Finish the DeepLearning.AI prompt engineering short course (it's 90 minutes — no excuses).</span></label>
+      <label class="drill"><input type="checkbox"><span>Rewrite your 5 most-used prompts using role + context + task + format + constraints. Save them as a personal prompt library.</span></label>
+      <label class="drill"><input type="checkbox"><span>Run one A/B test: same task, lazy prompt vs. engineered prompt. Compare outputs side by side.</span></label>
+      <label class="drill"><input type="checkbox"><span>Learn one advanced pattern from the Anthropic docs (chain-of-thought, examples/few-shot, or prefilling) and use it once.</span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PHASE 3 ===== -->
+<section class="phase" id="p3">
+  <div class="wrap">
+    <div class="phasehead"><span class="phasenum">03</span><h2>Leverage — Monetize the Skill</h2></div>
+    <div class="phasegoal">GOAL → <b>Save 5+ hours/week and become the AI person at your job.</b> Career leverage isn't a certificate — it's visible output. <span class="chip" data-chip="3">0/5 drills</span></div>
+
+    <p class="body">Top-1% performers don't "use AI sometimes." They rebuild their workflows around it: drafts in minutes, analysis in seconds, meeting prep automated. Then — and this is the part most people skip — they make that leverage <b>visible</b>. The person who teaches the team becomes indispensable. The person who quietly uses it stays invisible.</p>
+
+    <div class="grid">
+      <a class="res" href="https://grow.google/ai-essentials/" target="_blank" rel="noopener">
+        <div class="inst">Google</div><div class="t">Google AI Essentials</div><div class="d">Under 10 hours, built for working professionals. A credible certificate for your LinkedIn while you learn workflow patterns.</div><span class="free">CERT AVAILABLE</span>
+      </a>
+      <a class="res" href="https://www.coursera.org/learn/ai-for-everyone" target="_blank" rel="noopener">
+        <div class="inst">DeepLearning.AI · Andrew Ng</div><div class="t">AI for Everyone</div><div class="d">The business-strategy view: what AI can and can't do, how to spot opportunities inside your company.</div><span class="free">FREE TO AUDIT</span>
+      </a>
+      <a class="res" href="https://openai.com/chatgpt/use-cases/" target="_blank" rel="noopener">
+        <div class="inst">OpenAI</div><div class="t">Real-world use case library</div><div class="d">Steal workflows directly instead of inventing them. Match them to your actual job tasks.</div><span class="free">FREE</span>
+      </a>
+    </div>
+
+    <div class="widget">
+      <div class="wtag">Interactive · Leverage Audit</div>
+      <h3>Find your 5 hours</h3>
+      <p>Check every task you do weekly. The audit tells you your estimated reclaimable hours and where to attack first. Be honest — the audit only works if you are.</p>
+      <div class="quiz" id="auditList">
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="2" data-task="Writing emails, messages, and documents"><span>I write emails, docs, or messages for 2+ hrs/week</span></label>
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="1.5" data-task="Summarizing meetings, reports, or long reads"><span>I read/summarize long documents, threads, or meetings</span></label>
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="2" data-task="Research and first-draft analysis"><span>I do research or first-pass analysis</span></label>
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="1" data-task="Building slides and presentations"><span>I build slide decks or presentations</span></label>
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="1.5" data-task="Spreadsheet work and data cleanup"><span>I wrangle spreadsheets or clean data</span></label>
+        <label class="drill" style="border:1px solid #2A4E4F;border-radius:3px;margin:6px 0"><input type="checkbox" class="audit" data-hrs="1" data-task="Brainstorming and planning"><span>I brainstorm, plan projects, or draft strategy</span></label>
+      </div>
+      <button class="go" id="auditBtn">Calculate my leverage</button>
+      <div class="verdict" id="auditOut"></div>
+    </div>
+
+    <div class="gym"><div class="gymtag">Recall Gym — answer out loud BEFORE flipping. Return in 48h, then 7 days.</div><div class="cards"><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">The career leverage formula?</div><div class="face back">Rebuild a workflow, measure the time saved, make the win visible to decision-makers. Invisible leverage is worthless.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Why teach AI to your team?</div><div class="face back">The teacher becomes the go-to person. Reputation compounds faster than private skill ever will.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Where do you attack first?</div><div class="face back">Your single biggest weekly time-sink. Depth on one workflow beats dabbling across ten.</div></div></div></div></div>
+
+    <div class="drills" data-phase="3">
+      <header>Phase 03 Drills</header>
+      <label class="drill"><input type="checkbox"><span>Run the leverage audit and rebuild your #1 time-sink workflow with AI this week. Measure the time saved.</span></label>
+      <label class="drill"><input type="checkbox"><span>Complete Google AI Essentials and put the certificate on LinkedIn.</span></label>
+      <label class="drill"><input type="checkbox"><span>Make it visible: show one AI-powered workflow to your manager or team. Frame it as "here's how I 3x'd this task."</span></label>
+      <label class="drill"><input type="checkbox"><span>Post once (LinkedIn or internal channel) about a concrete before/after. Operators build reputation in public.</span></label>
+      <label class="drill"><input type="checkbox"><span>Identify one person at work drowning in a task AI handles well. Help them. That's networking with proof of work.</span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PHASE 4 ===== -->
+<section class="phase" id="p4">
+  <div class="wrap">
+    <div class="phasehead"><span class="phasenum">04</span><h2>Building — Make Real Things</h2></div>
+    <div class="phasegoal">GOAL → <b>Ship one working AI project, however small.</b> A shipped project beats ten certificates in any interview or pitch. <span class="chip" data-chip="4">0/5 drills</span></div>
+
+    <p class="body">You don't need a CS degree to build with AI — the models write most of the code now. What you need is the builder's loop: pick a small problem, prototype fast, get it in front of someone, iterate. Start no-code, graduate to code when the project demands it. These are the institutions that will take you there.</p>
+
+    <div class="grid">
+      <a class="res" href="https://docs.anthropic.com/en/docs/intro-to-claude" target="_blank" rel="noopener">
+        <div class="inst">Anthropic</div><div class="t">Claude API &amp; Docs</div><div class="d">Build your first AI-powered app. The docs include quickstarts you can run in minutes.</div><span class="free">FREE DOCS</span>
+      </a>
+      <a class="res" href="https://www.fast.ai/" target="_blank" rel="noopener">
+        <div class="inst">fast.ai · Jeremy Howard</div><div class="t">Practical Deep Learning for Coders</div><div class="d">The legendary top-down course: build working models in lesson one, theory later. Free forever.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="http://introtodeeplearning.com/" target="_blank" rel="noopener">
+        <div class="inst">MIT</div><div class="t">6.S191 Intro to Deep Learning</div><div class="d">MIT's official bootcamp — lectures and labs published free every year. For when you want real depth.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="https://cs50.harvard.edu/python/" target="_blank" rel="noopener">
+        <div class="inst">Harvard</div><div class="t">CS50 Python</div><div class="d">If code is your bottleneck, this is the most respected free on-ramp in the world.</div><span class="free">FREE</span>
+      </a>
+    </div>
+
+    <div class="widget">
+      <div class="wtag">Interactive · Project Selector</div>
+      <h3>Pick your first build — right now</h3>
+      <p>Indecision kills more builders than difficulty does. Pick a tier. You get a concrete brief with steps. Your only job is to finish it in 2 weeks.</p>
+      <div class="projpick">
+        <div class="projcard" data-p="0" tabindex="0" role="button"><span class="lvl">Tier 1 · No code · 1 weekend</span><b>Custom AI Assistant</b><small>Build a specialized GPT/Claude Project for one real workflow you do weekly.</small></div>
+        <div class="projcard" data-p="1" tabindex="0" role="button"><span class="lvl">Tier 2 · Low code · 1 week</span><b>AI Workflow Automation</b><small>Chain AI into a tool like Zapier/Make to automate a task end-to-end.</small></div>
+        <div class="projcard" data-p="2" tabindex="0" role="button"><span class="lvl">Tier 3 · Code · 2 weeks</span><b>AI Web App</b><small>A working app calling the Claude or OpenAI API — built largely by prompting AI to write the code.</small></div>
+      </div>
+      <div class="projbrief" id="pb0">
+        <b>BRIEF — Custom AI Assistant</b>
+        <ol>
+          <li>Pick one recurring task (weekly report, client emails, meeting prep).</li>
+          <li>Write a system prompt using your Phase 02 skills: role, context, format, constraints, 2 examples of great output.</li>
+          <li>Build it as a Claude Project or custom GPT. Feed it your reference docs.</li>
+          <li>Use it daily for a week. Log what fails. Fix the prompt each time.</li>
+          <li>Ship test: give it to one colleague. If they keep using it, you shipped.</li>
+        </ol>
+      </div>
+      <div class="projbrief" id="pb1">
+        <b>BRIEF — AI Workflow Automation</b>
+        <ol>
+          <li>Map one multi-step task: e.g., "new form response → AI summarizes &amp; drafts reply → posts to Slack/email."</li>
+          <li>Sign up for Zapier or Make (free tiers work). Connect your trigger app.</li>
+          <li>Add an AI step with a tight, engineered prompt. Test with 5 real inputs.</li>
+          <li>Add the output step. Run it live for a week; track errors and time saved.</li>
+          <li>Ship test: it runs 10 times without you touching it.</li>
+        </ol>
+      </div>
+      <div class="projbrief" id="pb2">
+        <b>BRIEF — AI Web App</b>
+        <ol>
+          <li>Pick a one-feature idea: résumé critiquer, contract explainer, workout generator. One feature. Not a platform.</li>
+          <li>Get an API key (Anthropic or OpenAI). Read the quickstart — it's shorter than you think.</li>
+          <li>Use AI itself to scaffold the app (ask it for a simple Python/JS app that calls the API). Debug by pasting errors back in.</li>
+          <li>Deploy free on Vercel, Replit, or Streamlit Cloud.</li>
+          <li>Ship test: 5 strangers use it and one gives you feedback you didn't expect.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="gym"><div class="gymtag">Recall Gym — answer out loud BEFORE flipping. Return in 48h, then 7 days.</div><div class="cards"><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">The builder's loop?</div><div class="face back">Small problem, fast prototype, real user, iterate. Two weeks, maximum.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Why must build #1 be small?</div><div class="face back">Finishing creates skill and proof. Ambition without shipping is procrastination in a nicer outfit.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">What is a ship test?</div><div class="face back">A concrete pass/fail: another human uses your thing without you standing next to it.</div></div></div></div></div>
+
+    <div class="drills" data-phase="4">
+      <header>Phase 04 Drills</header>
+      <label class="drill"><input type="checkbox"><span>Pick a project tier above. Today. Write the one-sentence spec.</span></label>
+      <label class="drill"><input type="checkbox"><span>Complete step 1–2 of your brief within 48 hours of picking (momentum beats planning).</span></label>
+      <label class="drill"><input type="checkbox"><span>Get your project in front of one real user before it feels ready.</span></label>
+      <label class="drill"><input type="checkbox"><span>Iterate once based on real feedback — not on your own perfectionism.</span></label>
+      <label class="drill"><input type="checkbox"><span>Pass your tier's ship test.</span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PHASE 5 ===== -->
+<section class="phase" id="p5">
+  <div class="wrap">
+    <div class="phasehead"><span class="phasenum">05</span><h2>Shipping — Compound in Public</h2></div>
+    <div class="phasegoal">GOAL → <b>Turn one project into reputation, network, and the next opportunity.</b> Skills compound only when people can see them. <span class="chip" data-chip="5">0/5 drills</span></div>
+
+    <p class="body">This is where the top 1% separate. A finished project sitting on your laptop is worth nothing. Documented and shared, it's a portfolio piece, a conversation starter with people above your level, and proof you're an operator, not a spectator. The loop from here is simple: build → document → share → meet people → build bigger.</p>
+
+    <div class="grid">
+      <a class="res" href="https://www.ycombinator.com/library" target="_blank" rel="noopener">
+        <div class="inst">Y Combinator</div><div class="t">Startup Library</div><div class="d">If your project has legs, this is the canon on turning builds into businesses. Free, brutal, practical.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="https://hai.stanford.edu/" target="_blank" rel="noopener">
+        <div class="inst">Stanford HAI</div><div class="t">Human-Centered AI Institute</div><div class="d">Stay ahead of where AI is going — policy, research, the annual AI Index Report. Operators read the map.</div><span class="free">FREE</span>
+      </a>
+      <a class="res" href="https://www.anthropic.com/research" target="_blank" rel="noopener">
+        <div class="inst">Anthropic</div><div class="t">Research &amp; Safety</div><div class="d">Understand capabilities and limits straight from a frontier lab. Knowing what's coming is an edge.</div><span class="free">FREE</span>
+      </a>
+    </div>
+
+    <div class="widget quiz">
+      <div class="wtag">Interactive · Final Gate</div>
+      <h3>Operator exam — 4 questions</h3>
+      <p>If you can't pass this cold, you skipped drills. Go back.</p>
+      <div class="q"><p>1. Why do LLMs hallucinate?</p>
+        <button class="opt" data-r="0">They're connected to unreliable internet sources</button>
+        <button class="opt" data-r="1">They predict plausible next tokens — plausibility isn't truth</button>
+        <button class="opt" data-r="0">Their databases are out of date</button>
+        <div class="expl">They generate the most statistically likely continuation. Sounding right and being right are different objectives.</div>
+      </div>
+      <div class="q"><p>2. Your prompt returns generic output. First fix?</p>
+        <button class="opt" data-r="0">Ask again and hope</button>
+        <button class="opt" data-r="0">Switch to a different AI model</button>
+        <button class="opt" data-r="1">Add role, context, format, and an example of great output</button>
+        <div class="expl">Generic input → generic output. The five components exist because they work.</div>
+      </div>
+      <div class="q"><p>3. Fastest path to career leverage with AI?</p>
+        <button class="opt" data-r="0">Collect as many certificates as possible</button>
+        <button class="opt" data-r="1">Rebuild a visible workflow, measure the gain, show your team</button>
+        <button class="opt" data-r="0">Wait until the tools mature</button>
+        <div class="expl">Visible, measured output builds reputation. Certificates only open doors when paired with proof.</div>
+      </div>
+      <div class="q"><p>4. Your first build should be…</p>
+        <button class="opt" data-r="1">Small, shipped in 2 weeks, used by at least one real person</button>
+        <button class="opt" data-r="0">Ambitious enough to impress investors</button>
+        <button class="opt" data-r="0">Perfect before anyone sees it</button>
+        <div class="expl">Shipping small beats planning big. Every serious builder's first project was embarrassing. They shipped anyway.</div>
+      </div>
+      <div class="verdict" id="quizOut"></div>
+    </div>
+
+    <div class="gym"><div class="gymtag">Recall Gym — answer out loud BEFORE flipping. Return in 48h, then 7 days.</div><div class="cards"><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">The compounding loop?</div><div class="face back">Build, document, share, meet people, build bigger. Skip a step and the flywheel stalls.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">Why publish your work?</div><div class="face back">An unshared project is worth $0 socially. Visibility converts skill into network, and network into opportunity.</div></div></div><div class="fc" tabindex="0" role="button" aria-label="Recall card. Tap to reveal answer"><div class="inner"><div class="face front">The cold outreach rule?</div><div class="face back">Lead with your shipped project, not a request. Give proof before you ask for anything.</div></div></div></div></div>
+
+    <div class="drills" data-phase="5">
+      <header>Phase 05 Drills</header>
+      <label class="drill"><input type="checkbox"><span>Write up your Phase 04 project: problem, what you built, result. One page or one post.</span></label>
+      <label class="drill"><input type="checkbox"><span>Publish it — LinkedIn, X, a personal site, or your company channel.</span></label>
+      <label class="drill"><input type="checkbox"><span>DM or email 3 people doing AI work you admire. Lead with your project, not a favor.</span></label>
+      <label class="drill"><input type="checkbox"><span>Score 4/4 on the operator exam above.</span></label>
+      <label class="drill"><input type="checkbox"><span>Commit to the next build — write the one-sentence spec for project #2 before the momentum dies.</span></label>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Resource Vault ===== -->
+<section class="vault" id="vault">
+  <div class="wrap">
+    <div class="phasehead"><h2>The Vault — Full Institution List</h2></div>
+    <p class="body">Everything above plus the deep cuts. All free or free-to-audit. Bookmark this section; ignore everything on the internet that isn't on it until you finish Phase 05.</p>
+    <div class="grid">
+      <a class="res" href="https://cs50.harvard.edu/ai/" target="_blank" rel="noopener"><div class="inst">Harvard</div><div class="t">CS50's Introduction to AI with Python</div><div class="d">The gold-standard structured intro. Search, knowledge, ML, neural nets, language.</div><span class="free">FREE</span></a>
+      <a class="res" href="https://ocw.mit.edu/search/?q=artificial+intelligence" target="_blank" rel="noopener"><div class="inst">MIT OpenCourseWare</div><div class="t">AI Course Catalog</div><div class="d">Full MIT courses, lecture videos and assignments included.</div><span class="free">FREE</span></a>
+      <a class="res" href="https://online.stanford.edu/courses/cs229-machine-learning" target="_blank" rel="noopener"><div class="inst">Stanford</div><div class="t">CS229 Machine Learning</div><div class="d">Andrew Ng's legendary course — lectures free on YouTube. For serious depth.</div><span class="free">LECTURES FREE</span></a>
+      <a class="res" href="https://www.elementsofai.com/" target="_blank" rel="noopener"><div class="inst">University of Helsinki</div><div class="t">Elements of AI</div><div class="d">The friendliest rigorous intro ever made. Over a million graduates.</div><span class="free">FREE + CERT</span></a>
+      <a class="res" href="https://www.deeplearning.ai/short-courses/" target="_blank" rel="noopener"><div class="inst">DeepLearning.AI</div><div class="t">Short Courses Library</div><div class="d">1–2 hour hands-on courses on RAG, agents, fine-tuning — updated constantly.</div><span class="free">FREE</span></a>
+      <a class="res" href="https://developers.google.com/machine-learning/crash-course" target="_blank" rel="noopener"><div class="inst">Google</div><div class="t">Machine Learning Crash Course</div><div class="d">Google's internal ML training, public. Interactive visualizations throughout.</div><span class="free">FREE</span></a>
+      <a class="res" href="https://karpathy.ai/zero-to-hero.html" target="_blank" rel="noopener"><div class="inst">Andrej Karpathy</div><div class="t">Neural Networks: Zero to Hero</div><div class="d">Build GPT from scratch, line by line, with one of the best teachers in the field.</div><span class="free">FREE</span></a>
+      <a class="res" href="https://aiindex.stanford.edu/" target="_blank" rel="noopener"><div class="inst">Stanford HAI</div><div class="t">AI Index Report</div><div class="d">The annual state-of-AI report. Read the summary yearly to stay oriented.</div><span class="free">FREE</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><b>AI OPERATOR</b> · Built for one student. You.</div>
+    <div>Your drill progress saves automatically on this device. The reps still have to be real.</div>
+  </div>
+</footer>
+
+<script>
+// ---------- Progress / readiness ----------
+const TOTAL = document.querySelectorAll('.drills .drill input').length;
+const phaseDone = {1:0,2:0,3:0,4:0,5:0};
+const phaseTotal = {};
+document.querySelectorAll('.drills').forEach(d=>{
+  const p = d.dataset.phase;
+  phaseTotal[p] = d.querySelectorAll('input').length;
+});
+const milestones={20:'20% — momentum is real. Most people never get here.',40:'40% — you now out-prompt 90% of casual users.',60:'60% — leverage cleared. Builder phase. Lock in.',80:'80% — you ship things now. Almost nobody does.',100:'100% — OPERATOR. Screenshot the rail. Then write the spec for build #2.'};
+let lastMilestone=0, toastTimer;
+const toast=document.createElement('div');toast.className='toast';toast.setAttribute('role','status');document.body.appendChild(toast);
+function fireToast(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('show'),3800);}
+function refresh(){
+  let done = 0;
+  document.querySelectorAll('.drills').forEach(d=>{
+    const p = d.dataset.phase;
+    let c = 0;
+    d.querySelectorAll('.drill').forEach(row=>{
+      const on = row.querySelector('input').checked;
+      row.classList.toggle('checked', on);
+      if(on){c++;done++;}
+    });
+    phaseDone[p]=c;
+    const dot = document.querySelector('.rail a[data-phase="'+p+'"]');
+    dot.classList.toggle('done', c===phaseTotal[p] && c>0);
+    const chip = document.querySelector('.chip[data-chip="'+p+'"]');
+    if(chip){chip.textContent=c+'/'+phaseTotal[p]+' drills';chip.classList.toggle('full',c===phaseTotal[p]);}
+  });
+  const pct = Math.round(done/TOTAL*100);
+  document.getElementById('scoreNum').textContent = pct+'%';
+  document.getElementById('railfill').style.width = pct+'%';
+  Object.keys(milestones).forEach(m=>{ if(pct>=+m && lastMilestone<+m){ lastMilestone=+m; fireToast(milestones[m]); } });
+}
+// ---------- Persistent progress (saves on this device; falls back silently if storage is unavailable) ----------
+const KEY='aiop-progress';
+function store(){
+  try{
+    const state={ c:[...document.querySelectorAll('.drills .drill input')].map(i=>i.checked), m:lastMilestone };
+    localStorage.setItem(KEY, JSON.stringify(state));
+  }catch(e){}
+}
+document.querySelectorAll('.drills .drill input').forEach(cb=>cb.addEventListener('change',()=>{refresh();store();}));
+(function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){
+      const s=JSON.parse(raw);
+      const boxes=document.querySelectorAll('.drills .drill input');
+      (s.c||[]).forEach((v,i)=>{ if(boxes[i]) boxes[i].checked=v; });
+      lastMilestone=s.m||0;
+    }
+  }catch(e){}
+  refresh();
+})();
+
+// ---------- Temperature lab ----------
+const tempSamples = [
+  '"Great coffee. Every day."',
+  '"Your morning, done right."',
+  '"Where the city wakes up — one cup at a time."',
+  '"Caffeine is a love language. We\'re fluent."',
+  '"ESPRESSO YOURSELF!! beans scream in flavor jazz ☕🌀 the moon drinks here on Tuesdays"'
+];
+const tempSlider = document.getElementById('tempSlider');
+const tempOut = document.getElementById('tempOut');
+function setTemp(){ tempOut.textContent = tempSamples[tempSlider.value]; }
+tempSlider.addEventListener('input', setTemp);
+setTemp();
+
+// ---------- Prompt grader ----------
+document.getElementById('gradeBtn').addEventListener('click', ()=>{
+  const t = document.getElementById('promptIn').value.toLowerCase();
+  const words = t.trim().split(/\s+/).filter(Boolean).length;
+  const hits = {
+    role: /(you are|act as|as a |persona|role of|expert)/.test(t),
+    context: /(context|background|audience|for my|for a |about|situation|company|team|client)/.test(t),
+    format: /(format|bullet|table|list|paragraph|words|tone|structure|sections|headline|steps|json|outline)/.test(t),
+    example: /(example|for instance|like this|such as|e\.g|sample|similar to)/.test(t),
+    constraint: /(don't|do not|avoid|must|never|only|limit|no more than|exclude|without)/.test(t),
+    length: words >= 40
+  };
+  let score = 0;
+  Object.keys(hits).forEach(k=>{
+    const li = document.querySelector('#gradeChecks li[data-k="'+k+'"]');
+    li.classList.toggle('hit', hits[k]);
+    if(hits[k]) score++;
+  });
+  const pct = Math.round(score/6*100);
+  document.getElementById('gradeFill').style.width = pct+'%';
+  const v = document.getElementById('gradeVerdict');
+  if(words===0){ v.textContent = 'Paste a prompt first. The grader can\'t grade air.'; return; }
+  if(pct>=80) v.textContent = 'Score: '+pct+' — Operator-grade. This is the standard. Keep it.';
+  else if(pct>=50) v.textContent = 'Score: '+pct+' — Mid. Add the missing components above and re-grade.';
+  else v.textContent = 'Score: '+pct+' — Trash, honestly. You\'re asking a genius for help and mumbling. Fix the ✗ items.';
+});
+
+// ---------- Leverage audit ----------
+document.getElementById('auditBtn').addEventListener('click', ()=>{
+  let hrs = 0; let top = null;
+  document.querySelectorAll('.audit:checked').forEach(cb=>{
+    hrs += parseFloat(cb.dataset.hrs);
+    if(!top) top = cb.dataset.task;
+  });
+  const out = document.getElementById('auditOut');
+  if(hrs===0){ out.textContent = 'Nothing checked. Either you have the most unusual job on Earth, or you\'re not being honest.'; return; }
+  out.textContent = 'Reclaimable: ~'+hrs+' hrs/week ('+Math.round(hrs*48)+' hrs/year). Attack first: '+top+'. That\'s your Phase 03 drill #1.';
+});
+
+// ---------- Project selector ----------
+document.querySelectorAll('.projcard').forEach(card=>{
+  const pick = ()=>{
+    document.querySelectorAll('.projcard').forEach(c=>c.classList.remove('sel'));
+    document.querySelectorAll('.projbrief').forEach(b=>b.classList.remove('show'));
+    card.classList.add('sel');
+    document.getElementById('pb'+card.dataset.p).classList.add('show');
+  };
+  card.addEventListener('click', pick);
+  card.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();pick();} });
+});
+
+// ---------- Quiz ----------
+let quizRight = 0, quizAnswered = 0;
+document.querySelectorAll('.quiz .q').forEach(q=>{
+  let answered = false;
+  q.querySelectorAll('.opt').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(answered) return;
+      answered = true; quizAnswered++;
+      const right = btn.dataset.r==='1';
+      btn.classList.add(right?'right':'wrong');
+      if(!right) q.querySelector('.opt[data-r="1"]').classList.add('right');
+      else quizRight++;
+      q.querySelector('.expl').style.display='block';
+      if(quizAnswered===4){
+        const out = document.getElementById('quizOut');
+        out.textContent = quizRight===4
+          ? 'Result: 4/4 — Gate passed. You\'re an operator. Now go check off the Phase 05 drills.'
+          : 'Result: '+quizRight+'/4 — Not passed. Review the phases you missed and retake after a page refresh.';
+      }
+    });
+  });
+});
+
+// ---------- Recall Gym flip cards ----------
+document.querySelectorAll('.fc').forEach(c=>{
+  const t=()=>c.classList.toggle('flip');
+  c.addEventListener('click',t);
+  c.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); t(); } });
+});
+
+// ---------- Scroll reveal (respects reduced motion) ----------
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches && 'IntersectionObserver' in window){
+  document.querySelectorAll('.grid, .vidgrid, .widget, .drills, .diagram, .gym, .sgrid').forEach(el=>el.classList.add('rv'));
+  const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }),{threshold:.1});
+  document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+}
+</script>
+</body>
+</html>
